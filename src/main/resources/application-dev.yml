@@ -1,0 +1,14 @@
+spring:
+  data:
+    mongodb:
+      database: fileserver
+      host: 192.28.4.23
+  servlet:
+    multipart:
+      max-file-size: 200MB
+      max-request-size: 200MB
+server:
+  port: 9333
+file:
+  server:
+    address: http://localhost:${server.port}/file/view/
