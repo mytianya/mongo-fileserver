@@ -41,12 +41,12 @@ public class FileController {
         res.put("fileUrl",properties.getAddress()+fid);
         return ResponseEntity.ok(res);
     }
-    @PostMapping("/remove/{fid}")
+    @PostMapping("/{fid}/remove")
     public ResponseEntity remove(@PathVariable("fid")String fid){
         fileService.remove(fid);
         return ResponseEntity.ok("");
     }
-    @RequestMapping("/view/{fid}")
+    @RequestMapping("/{fid}/view")
     public void download(@PathVariable("fid")String fid, HttpServletResponse response) throws IOException {
       fileService.download(fid,response);
     }
@@ -54,12 +54,12 @@ public class FileController {
     public ResponseEntity list(){
         return ResponseEntity.ok(fileService.list(3,3));
     }
-    @RequestMapping("/chunkDonwload")
-    public void chunkDownload(HttpServletRequest request,HttpServletResponse response) {
+    @RequestMapping("/{fid}/chunkDonwload1")
+    public void chunkDownload1(@PathVariable("fid")String fid, HttpServletRequest request,HttpServletResponse response) throws IOException {
         String range = request.getHeader("Range");
-        File file = new File("D:\\sucai\\电子书\\Maven实战.pdf");
+        System.out.println(range);
         long startByte = 0;
-        long endByte = file.length();
+        long endByte = -1;
         if (range != null && range.contains("bytes=") && range.contains("-")) {
             range = range.substring(range.lastIndexOf("=" )+1).trim();
             String[] ranges = range.split("-");
@@ -70,18 +70,48 @@ public class FileController {
                 }
                 //range为bytes=1111-
                 else if (range.endsWith("-")) {
-                    endByte = Long.parseLong(ranges[0]);
+                    startByte = Long.parseLong(ranges[0]);
                 }
             } else if (ranges.length == 2) {
                 startByte = Long.parseLong(ranges[0]);
                 endByte = Long.parseLong(ranges[1]);
             }
         }
+        //
+        fileService.downloadChunk(fid,startByte,endByte,response);
+
+    }
+    @RequestMapping("/{pid}/chunkDonwload")
+    public void chunkDownload(@PathVariable("fid")String fid, HttpServletRequest request,HttpServletResponse response) {
+        String range = request.getHeader("Range");
+        File file = new File("/home/codehome/下载/Conduktor-2.13.1.deb");
+        long startByte = 0;
+        long endByte = -1;
+        if (range != null && range.contains("bytes=") && range.contains("-")) {
+            range = range.substring(range.lastIndexOf("=" )+1).trim();
+            String[] ranges = range.split("-");
+            if (ranges.length == 1) {
+                //range为 bytes=-1111
+                if (range.startsWith("-")) {
+                    endByte = Long.parseLong(ranges[0]);
+                }
+                //range为bytes=1111-
+                else if (range.endsWith("-")) {
+                    startByte = Long.parseLong(ranges[0]);
+                }
+            } else if (ranges.length == 2) {
+                startByte = Long.parseLong(ranges[0]);
+                endByte = Long.parseLong(ranges[1]);
+            }
+        }
+        //
+        byte[] bytes=null;
+
         long contentLength = endByte - startByte + 1;
         response.setHeader("Accept-Ranges", "bytes");
         response.setStatus(HttpServletResponse.SC_PARTIAL_CONTENT);
         response.setHeader("Content-Disposition", "attachment;filename=" + file.getName());
-        response.setHeader("Content-Length", String.valueOf(contentLength));
+        response.setHeader("Content-Length", String.valueOf(bytes.length));
         //坑爹地方三：Content-Range，格式为
         // [要下载的开始位置]-[结束位置]/[文件总大小]
         response
@@ -102,6 +132,7 @@ public class FileController {
             //不然会会先读取randomAccessFile，造成后面读取位置出错，找了一天才发现问题所在
             while ((transmitted + len) <= contentLength
                 && (len = randomAccessFile.read(buff)) != -1) {
+                log.info("current index:{}",len);
                 outputStream.write(buff, 0, len);
                 transmitted += len;
                 //                //停一下，方便测试，用的时候删了就行了

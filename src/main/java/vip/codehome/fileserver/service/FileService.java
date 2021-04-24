@@ -15,6 +15,7 @@ public interface FileService {
     String upload(InputStream inputStream,String fileName);
     void download(String fid, HttpServletResponse response) throws IOException;
     void remove(String fid);
+    void downloadChunk(String fid,long start,long end,HttpServletResponse response) throws IOException;
     List<String> search(String fileName);
     List<String> list(Integer start,Integer size);
 }
