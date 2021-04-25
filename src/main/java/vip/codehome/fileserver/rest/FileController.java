@@ -81,7 +81,7 @@ public class FileController {
         fileService.downloadChunk(fid,startByte,endByte,response);
 
     }
-    @RequestMapping("/{pid}/chunkDonwload")
+    @RequestMapping("/{fid}/chunkDonwload")
     public void chunkDownload(@PathVariable("fid")String fid, HttpServletRequest request,HttpServletResponse response) {
         String range = request.getHeader("Range");
         File file = new File("/home/codehome/下载/Conduktor-2.13.1.deb");
